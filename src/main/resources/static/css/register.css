@@ -1,0 +1,22 @@
+:root { --ink: #172b3a; --muted: #6c7c87; --teal: #0f766e; --line: #dbe7e6; }
+* { box-sizing: border-box; }
+body { min-height: 100vh; margin: 0; background: #f5faf9; color: var(--ink); font-family: Georgia, 'Times New Roman', serif; }
+.auth-shell { min-height: 100vh; padding: 40px 20px; background: radial-gradient(circle at 8% 10%, #d9f2ed 0, transparent 23%), radial-gradient(circle at 92% 90%, #dcecf7 0, transparent 25%), #f8fcfb; }
+.auth-panel { display: grid; place-items: center; }
+.auth-card { width: min(100%, 560px); padding: clamp(28px, 5vw, 50px); background: rgba(255,255,255,.93); border: 1px solid white; box-shadow: 0 22px 70px rgba(23, 60, 65, .14); border-radius: 6px; }
+.brand-header { text-align: center; margin-bottom: 26px; }
+.brand-mark { width: min(100%, 280px); height: 92px; object-fit: contain; }
+.brand-kicker { color: var(--teal); font: 700 .7rem/1.2 Arial, sans-serif; letter-spacing: .18em; margin-top: 8px; text-transform: uppercase; }
+.project-note { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin: 0 0 28px; }
+.project-note div { padding: 12px 8px; border: 1px solid #e2eeec; border-radius: 4px; background: #f7fcfb; color: #527079; font: .72rem/1.35 Arial, sans-serif; text-align: center; }
+.project-note strong { display: block; color: var(--ink); font-size: .8rem; margin-bottom: 3px; }
+.auth-card h1 { margin: 0 0 8px; font-size: 2.15rem; font-weight: 400; }
+.auth-subtitle { color: var(--muted); font: .92rem/1.5 Arial, sans-serif; margin: 0 0 24px; }
+.field-label { display: block; color: #38515b; font: 700 .73rem/1.2 Arial, sans-serif; letter-spacing: .08em; margin: 15px 0 7px; text-transform: uppercase; }
+.field { width: 100%; border: 1px solid var(--line); border-radius: 3px; padding: 12px 14px; color: var(--ink); background: #fbfefd; font: 1rem Arial, sans-serif; outline: none; }
+.field:focus { border-color: var(--teal); box-shadow: 0 0 0 3px rgba(15, 118, 110, .12); }
+.submit-button { width: 100%; border: 0; border-radius: 3px; padding: 14px; margin-top: 24px; background: var(--teal); color: white; cursor: pointer; font: 700 .78rem Arial, sans-serif; letter-spacing: .1em; text-transform: uppercase; }
+.submit-button:hover { background: #0b5f59; transform: translateY(-1px); }
+.auth-footer { color: var(--muted); font: .86rem Arial, sans-serif; margin: 25px 0 0; text-align: center; }
+.auth-footer a { color: var(--teal); font-weight: 700; text-decoration: none; }
+@media (max-width: 520px) { .auth-shell { padding: 18px 12px; } .project-note { gap: 5px; } .project-note div { padding: 10px 4px; font-size: .65rem; } }

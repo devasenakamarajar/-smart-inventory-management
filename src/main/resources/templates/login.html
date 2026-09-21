@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sign in | Smart Inventory</title>
+    <link rel="stylesheet" href="/css/login.css">
+</head>
+<body>
+<main class="auth-shell">
+        <section class="brand-panel">
+            <div class="brand-content">
+                <img class="brand-mark" src="/logo.jpg.png" alt="Inventory Management System">
+                <div class="brand-copy"><div class="brand-kicker">Inventory intelligence</div><h2>Welcome back to Smart Inventory.</h2><p>Streamline your stock, orders, and sales in one place. Log in to manage your workspace.</p></div>
+                <div class="dashboard-preview"><div class="preview-card">Products tracked<strong>Live</strong></div><div class="preview-card">Stock and sales, connected<strong>24 / 7</strong></div></div>
+            </div>
+    </section>
+    <section class="auth-panel">
+      <div class="auth-card">
+        <h1>Sign in to your workspace</h1>
+        <p class="auth-subtitle">Use your username or email to access your shop dashboard.</p>
+        <form id="loginForm">
+            <label class="field-label" for="username">Username or email</label><div class="input-wrap"><span class="input-icon" aria-hidden="true">&#9679;</span><input class="field" id="username" autocomplete="username" placeholder="e.g., alex@company.com" required></div>
+            <label class="field-label" for="password">Password</label><div class="input-wrap"><span class="input-icon" aria-hidden="true">&#9632;</span><input class="field" id="password" type="password" autocomplete="current-password" placeholder="Enter your password" required><button class="password-toggle" id="passwordToggle" type="button" aria-label="Show password">&#9673;</button></div>
+            <button class="submit-button" type="submit">Sign in to dashboard</button><div id="loginError" class="text-danger small mt-3 d-none"></div>
+        </form>
+        <p class="auth-footer">New here? <a href="/register">Create an account</a></p>
+      </div>
+    </section>
+</main>
+<script src="/js/login.js"></script>
+</body>
+</html>

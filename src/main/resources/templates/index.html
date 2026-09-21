@@ -1,0 +1,1021 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Smart Inventory Management</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+    <style>
+        :root {
+            --ink: #173332;
+            --muted: #6f8583;
+            --line: #dbe9e5;
+            --panel: #ffffff;
+            --navy: #123f3b;
+            --blue: #8bd7ca;
+            --cyan: #8bd7ca;
+            --canvas: #f4faf8;
+        }
+        * { box-sizing: border-box; }
+        body {
+            background: radial-gradient(circle at 92% 4%, #d9f2ed 0, transparent 22%), radial-gradient(circle at 8% 92%, #e4f1ed 0, transparent 24%), var(--canvas);
+            color: var(--ink);
+            font-family: "Segoe UI", system-ui, sans-serif;
+            font-size: .92rem;
+        }
+        .app-shell { min-height: 100vh; }
+        .sidebar {
+            background: linear-gradient(180deg, #f7fffd 0%, #dff5ef 52%, #c9ebe3 100%);
+            min-height: 100vh;
+            color: #173332;
+            box-shadow: 8px 0 28px rgba(15, 85, 78, .12);
+            border-right: 1px solid #bfe1d9;
+        }
+        .sidebar .nav-link {
+            color: #356661;
+            border-radius: 7px;
+            font-size: .84rem;
+            font-weight: 600;
+            margin: 2px 0;
+            padding: 11px 14px;
+            transition: background .2s ease, color .2s ease, transform .2s ease;
+        }
+        .sidebar .nav-link:hover, .sidebar .nav-link.active {
+            background: rgba(255, 255, 255, .78);
+            color: #0f5e57;
+            transform: translateX(2px);
+            box-shadow: 0 3px 10px rgba(15, 118, 110, .08);
+        }
+        .sidebar .nav-link i { color: #3e9d90; width: 20px; text-align: center; }
+        .sidebar-section {
+            color: #5d948c;
+            font-size: .65rem;
+            font-weight: 700;
+            letter-spacing: .12em;
+            margin: 22px 14px 7px;
+            text-transform: uppercase;
+        }
+        .sidebar-brand {
+            display: block;
+            width: 100%;
+            height: 106px;
+            object-fit: contain;
+            object-position: center;
+            padding: 0;
+        }
+        .topbar {
+            background: rgba(255, 255, 255, .9);
+            border-bottom: 1px solid var(--line);
+            min-height: 74px;
+            backdrop-filter: blur(10px);
+        }
+        .topbar .navbar-brand { color: var(--ink); font-weight: 700; letter-spacing: -.01em; }
+        .profile-chip { border-left: 1px solid var(--line); padding-left: 16px; }
+        .profile-avatar { background: #d9f2ed; color: #0f766e; font-weight: 700; height: 34px; width: 34px; }
+        .dashboard-content { max-width: 1680px; }
+        .eyebrow { color: #0f766e; font-size: .7rem; font-weight: 800; letter-spacing: .12em; text-transform: uppercase; }
+        .page-title { font-size: 1.7rem; font-weight: 750; letter-spacing: -.03em; }
+        .card-stat, .workspace-panel {
+            background: var(--panel);
+            border: 1px solid var(--line);
+            border-radius: 10px;
+            box-shadow: 0 6px 20px rgba(23, 76, 70, .07);
+        }
+        .card-stat { min-height: 128px; overflow: hidden; position: relative; }
+        .card-stat::after { background: linear-gradient(90deg, #8bd7ca, #c5eee7); content: ""; height: 3px; inset: auto 0 0; position: absolute; }
+        .stat-label { color: var(--muted); font-size: .74rem; font-weight: 700; letter-spacing: .04em; text-transform: uppercase; }
+        .stat-value { color: var(--ink); font-size: 1.65rem; font-weight: 750; letter-spacing: -.04em; }
+        .stat-icon {
+            width: 42px;
+            height: 42px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 9px;
+            color: #173332;
+            background: #dff6f1;
+            font-size: 1rem;
+        }
+        .metric-note { color: #718096; font-size: .72rem; }
+        .workspace-panel { padding: 22px; }
+        .panel-title { font-size: .98rem; font-weight: 750; margin: 0; }
+        .panel-subtitle { color: var(--muted); font-size: .76rem; }
+        .pulse-chart { align-items: end; display: flex; gap: 14px; height: 185px; padding: 18px 8px 0; }
+        .pulse-column { align-items: center; display: flex; flex: 1; flex-direction: column; gap: 8px; height: 100%; justify-content: end; }
+        .pulse-bar { background: linear-gradient(180deg, #b8ebe2, #8bd7ca); border-radius: 5px 5px 2px 2px; min-height: 10px; transition: height .7s ease; width: min(34px, 70%); }
+        .pulse-label { color: var(--muted); font-size: .68rem; }
+        .pulse-value { color: var(--ink); font-size: .7rem; font-weight: 700; }
+        .quick-action { background: #f7fcfb; border: 1px solid #dcece8; border-radius: 8px; color: var(--ink); display: flex; gap: 10px; padding: 12px; text-decoration: none; }
+        .quick-action:hover { background: #eaf7f3; color: #0f766e; }
+        .quick-action i { color: #0f766e; margin-top: 2px; }
+        .app-toast { background: #155b54; border: 0; border-radius: 10px; box-shadow: 0 12px 30px rgba(15, 85, 78, .2); color: white; min-width: 290px; }
+        .app-toast .toast-icon { align-items: center; background: #7dd2c1; border-radius: 50%; color: #155b54; display: inline-flex; height: 28px; justify-content: center; width: 28px; }
+        .confirm-modal-backdrop { align-items: center; background: rgba(10, 55, 51, .42); display: none; inset: 0; justify-content: center; padding: 20px; position: fixed; z-index: 1080; }
+        .confirm-modal-backdrop.show { display: flex; }
+        .confirm-modal { background: white; border: 1px solid #dbe9e5; border-radius: 12px; box-shadow: 0 20px 60px rgba(15, 85, 78, .2); max-width: 430px; padding: 24px; width: 100%; }
+        .confirm-icon { align-items: center; background: #fff1dc; border-radius: 10px; color: #bd7418; display: inline-flex; font-size: 1.15rem; height: 42px; justify-content: center; width: 42px; }
+        .receipt-paper {
+            background: #fffdf7;
+            border: 1px dashed #adb5bd;
+            font-family: Georgia, serif;
+        }
+        .workspace-heading {
+            letter-spacing: 0;
+        }
+        .admin-panel {
+            border: 1px solid #e2e7ef;
+            border-radius: 8px;
+            background: white;
+            box-shadow: 0 3px 14px rgba(23, 32, 51, 0.05);
+        }
+        .table thead th {
+            background: #f8fafc;
+            color: #5d687a;
+            font-size: .75rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: .04em;
+            white-space: nowrap;
+        }
+        .btn-primary, .bg-primary { background-color: #8bd7ca !important; border-color: #8bd7ca !important; color: #173332 !important; }
+        .btn-primary:hover { background-color: #55b7a8 !important; border-color: #55b7a8 !important; color: #173332 !important; }
+        .btn-outline-primary { border-color: #8bd7ca; color: #0f766e; }
+        .btn-outline-primary:hover { background: #8bd7ca; border-color: #8bd7ca; color: #173332; }
+        .bg-info { background-color: #8bd7ca !important; color: #173332 !important; }
+        .bg-success { background-color: #8bd7ca !important; color: #173332 !important; }
+        .bg-warning { background-color: #d6a64a !important; }
+        .bg-danger { background-color: #b96a68 !important; }
+        .bg-dark { background-color: #28635d !important; }
+        .bg-secondary { background-color: #75958e !important; }
+        .form-control:focus, .form-select:focus { border-color: #8bd7ca; box-shadow: 0 0 0 .2rem rgba(139, 215, 202, .28); }
+        .admin-panel { border-color: #dbe9e5; box-shadow: 0 5px 18px rgba(23, 76, 70, .06); }
+        @media print {
+            body * { visibility: hidden; }
+            #receiptPanel, #receiptPanel * { visibility: visible; }
+            #receiptPanel { position: absolute; inset: 0; width: 100%; border: 0; }
+        }
+        @media (max-width: 767.98px) {
+            .sidebar { min-height: auto; }
+            .sidebar .nav { display: grid !important; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 2px 6px; }
+            .sidebar-section { grid-column: 1 / -1; margin: 12px 8px 3px; }
+            .sidebar .nav-link { padding: 9px 8px; }
+            .sidebar-brand { height: 88px; }
+            .topbar { min-height: 66px; padding: 12px !important; }
+            .topbar .navbar-brand { font-size: .92rem; }
+            .topbar .small.text-muted { font-size: .68rem; }
+            .profile-chip { gap: 8px !important; padding-left: 8px; }
+            .profile-chip .btn { font-size: .72rem; padding: 6px 8px; }
+            #dashboardView, #featureView { padding: 16px !important; }
+            .page-title { font-size: 1.35rem; }
+            .workspace-panel { padding: 16px; }
+            .pulse-chart { gap: 5px; height: 150px; padding-left: 0; padding-right: 0; }
+            .pulse-bar { width: min(22px, 72%); }
+            .table-responsive { margin-left: -4px; margin-right: -4px; }
+            .form-control, .form-select, .btn { min-height: 42px; }
+            .btn-sm { min-height: 36px; }
+            .app-toast { min-width: 0; width: calc(100vw - 32px); }
+        }
+    </style>
+</head>
+<body>
+    <div class="container-fluid app-shell">
+        <div class="row">
+            <aside class="col-md-2 sidebar p-0">
+                <div class="px-4 py-3 border-bottom border-secondary">
+                    <img class="sidebar-brand" src="/logo.jpg.png" alt="Inventory Management System">
+                </div>
+                <nav class="nav flex-column p-3">
+                    <div class="sidebar-section">Overview</div>
+                    <a class="nav-link" data-role="ADMIN" href="/dashboard"><i class="fa-solid fa-gauge me-2"></i>Dashboard</a>
+                    <a class="nav-link" data-role="BOTH" href="/products"><i class="fa-solid fa-box me-2"></i>Products</a>
+                    <div class="sidebar-section">Operations</div>
+                    <a class="nav-link" data-role="ADMIN" href="/categories"><i class="fa-solid fa-tags me-2"></i>Categories</a>
+                    <a class="nav-link" data-role="ADMIN" href="/staff"><i class="fa-solid fa-user-tie me-2"></i>Staff</a>
+                    <a class="nav-link" data-role="ADMIN" href="/customers"><i class="fa-solid fa-users me-2"></i>Customers</a>
+                    <a class="nav-link" data-role="ADMIN" href="/purchases"><i class="fa-solid fa-cart-plus me-2"></i>Purchases</a>
+                    <a class="nav-link" data-role="STAFF" href="/sales"><i class="fa-solid fa-cash-register me-2"></i>Billing</a>
+                    <a class="nav-link" data-role="ADMIN" href="/inventory"><i class="fa-solid fa-clipboard-list me-2"></i>Inventory</a>
+                    <a class="nav-link" data-role="BOTH" href="/returns"><i class="fa-solid fa-undo me-2"></i>Returns</a>
+                    <div class="sidebar-section">Insights</div>
+                    <a class="nav-link" data-role="ADMIN" href="/reports"><i class="fa-solid fa-chart-column me-2"></i>Reports</a>
+                </nav>
+            </aside>
+
+            <main class="col-md-10 p-0">
+                <nav class="topbar navbar navbar-expand-lg px-4 py-3">
+                    <div class="container-fluid">
+                        <div>
+                            <span class="navbar-brand mb-0 h5 d-block">Smart Inventory Management</span>
+                            <span class="small text-muted">Live operations and stock control</span>
+                        </div>
+                        <div class="ms-auto d-flex align-items-center gap-3 profile-chip">
+                            <div class="profile-avatar rounded-circle d-flex align-items-center justify-content-center" id="profileAvatar">S</div>
+                            <div class="d-none d-md-block"><div id="profileName" class="small fw-bold">Workspace user</div><div id="userRole" class="small text-muted">Staff</div></div>
+                            <button id="logoutButton" class="btn btn-outline-primary btn-sm" type="button"><i class="fa-solid fa-arrow-right-from-bracket me-1"></i>Logout</button>
+                        </div>
+                    </div>
+                </nav>
+
+                <div id="dashboardView" class="p-4 dashboard-content">
+                    <div class="d-flex justify-content-between align-items-end flex-wrap gap-3 mb-4">
+                        <div><div class="eyebrow">Control center</div><h1 class="page-title mb-1">Good to see you, <span id="dashboardGreeting">team</span></h1><p class="text-muted mb-0">Here is the latest pulse of your inventory operation.</p></div>
+                        <div class="small text-muted"><i class="fa-regular fa-clock me-1"></i><span id="dashboardDate"></span></div>
+                    </div>
+                    <div class="row g-3 mb-4">
+                        <div class="col-sm-6 col-xl-3">
+                            <div class="card card-stat p-3">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <div>
+                                        <div class="stat-label">Total Products</div>
+                                        <h3 class="stat-value mb-1" id="totalProducts">0</h3><div class="metric-note">Active catalog items</div>
+                                    </div>
+                                    <div class="stat-icon bg-primary"><i class="fa-solid fa-box"></i></div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-sm-6 col-xl-3">
+                            <div class="card card-stat p-3">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <div>
+                                        <div class="stat-label">Total Stock</div>
+                                        <h3 class="stat-value mb-1" id="totalStock">0</h3><div class="metric-note">Units currently on hand</div>
+                                    </div>
+                                    <div class="stat-icon bg-info"><i class="fa-solid fa-warehouse"></i></div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-sm-6 col-xl-3">
+                            <div id="lowStockCard" class="card card-stat p-3" role="button" tabindex="0" title="View low-stock products" style="cursor: pointer;">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <div>
+                                        <div class="stat-label">Low Stock</div>
+                                        <h3 class="stat-value mb-1" id="lowStockProducts">0</h3><div class="metric-note">Needs attention today</div>
+                                    </div>
+                                    <div class="stat-icon bg-warning"><i class="fa-solid fa-triangle-exclamation"></i></div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-sm-6 col-xl-3">
+                            <div id="todaySalesCard" class="card card-stat p-3" role="button" tabindex="0" title="View today's sales" style="cursor: pointer;">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <div>
+                                        <div class="stat-label">Today's Sales</div>
+                                        <h3 class="stat-value mb-1" id="todaysSales">₹0</h3><div class="metric-note">Completed transactions</div>
+                                    </div>
+                                    <div class="stat-icon bg-success"><i class="fa-solid fa-indian-rupee-sign"></i></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row g-3 mb-4">
+                        <div class="col-sm-6 col-xl-3">
+                            <div class="card card-stat p-3">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <div>
+                                        <div class="stat-label">Monthly Sales</div>
+                                        <h3 class="stat-value mb-1" id="monthlySales">₹0</h3><div class="metric-note">Month-to-date revenue</div>
+                                    </div>
+                                    <div class="stat-icon bg-dark"><i class="fa-solid fa-chart-line"></i></div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-sm-6 col-xl-3">
+                            <div class="card card-stat p-3">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <div>
+                                        <div class="stat-label">Open Purchases</div>
+                                        <h3 class="stat-value mb-1" id="pendingPurchaseOrders">0</h3><div class="metric-note">Pending or confirmed</div>
+                                    </div>
+                                    <div class="stat-icon bg-danger"><i class="fa-solid fa-bag-shopping"></i></div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-sm-6 col-xl-3">
+                            <div class="card card-stat p-3">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <div>
+                                        <div class="stat-label">Customers</div>
+                                        <h3 class="stat-value mb-1" id="totalCustomers">0</h3><div class="metric-note">Stored customer profiles</div>
+                                    </div>
+                                    <div class="stat-icon bg-primary"><i class="fa-solid fa-user-group"></i></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row g-3">
+                        <div class="col-xl-8">
+                            <section class="workspace-panel h-100">
+                                <div class="d-flex justify-content-between align-items-start mb-2"><div><h2 class="panel-title">Operational overview</h2><div class="panel-subtitle">Sales activity across the current operating window</div></div><span class="badge text-bg-light">Live metrics</span></div>
+                                <div class="pulse-chart" id="salesPulseChart">
+                                    <div class="pulse-column"><span class="pulse-value">--</span><div class="pulse-bar" style="height: 42%"></div><span class="pulse-label">Mon</span></div>
+                                    <div class="pulse-column"><span class="pulse-value">--</span><div class="pulse-bar" style="height: 58%"></div><span class="pulse-label">Tue</span></div>
+                                    <div class="pulse-column"><span class="pulse-value">--</span><div class="pulse-bar" style="height: 50%"></div><span class="pulse-label">Wed</span></div>
+                                    <div class="pulse-column"><span class="pulse-value">--</span><div class="pulse-bar" style="height: 72%"></div><span class="pulse-label">Thu</span></div>
+                                    <div class="pulse-column"><span class="pulse-value">--</span><div class="pulse-bar" style="height: 66%"></div><span class="pulse-label">Fri</span></div>
+                                    <div class="pulse-column"><span class="pulse-value">--</span><div class="pulse-bar" style="height: 84%"></div><span class="pulse-label">Sat</span></div>
+                                    <div class="pulse-column"><span class="pulse-value">--</span><div class="pulse-bar" style="height: 38%"></div><span class="pulse-label">Sun</span></div>
+                                </div>
+                            </section>
+                        </div>
+                        <div class="col-xl-4">
+                            <section class="workspace-panel h-100">
+                                <div class="mb-3"><h2 class="panel-title">Quick actions</h2><div class="panel-subtitle">Jump into frequent workflows</div></div>
+                                <div class="d-grid gap-2">
+                                    <a class="quick-action" href="/products" data-role="BOTH"><i class="fa-solid fa-box-open"></i><span><strong class="d-block small">Product catalog</strong><small class="text-muted">Review stock and pricing</small></span></a>
+                                    <a class="quick-action" href="/purchases" data-role="ADMIN"><i class="fa-solid fa-cart-plus"></i><span><strong class="d-block small">New purchase</strong><small class="text-muted">Keep replenishment moving</small></span></a>
+                                    <a class="quick-action" href="/customers" data-role="ADMIN"><i class="fa-solid fa-user-plus"></i><span><strong class="d-block small">Customer records</strong><small class="text-muted">View saved billing details</small></span></a>
+                                    <a class="quick-action" href="/reports" data-role="ADMIN"><i class="fa-solid fa-chart-simple"></i><span><strong class="d-block small">Reports</strong><small class="text-muted">Inspect operating performance</small></span></a>
+                                </div>
+                            </section>
+                        </div>
+                    </div>
+
+                </div>
+                <div id="featureView" class="p-4 d-none">
+                    <div class="d-flex justify-content-between align-items-center mb-4">
+                        <div>
+                            <h2 id="featureTitle" class="h4 mb-1"></h2>
+                            <p id="featureDescription" class="text-muted mb-0"></p>
+                        </div>
+                        <div class="d-flex align-items-center gap-2">
+                            <div id="productImportControls" class="d-none">
+                                <button id="addProductButton" class="btn btn-primary btn-sm" type="button"><i class="fa-solid fa-plus me-1"></i>Add product</button>
+                                <a class="btn btn-outline-secondary btn-sm" href="data:text/csv;charset=utf-8,productName%2Csku%2Cdescription%2CcategoryId%2Cbrand%2CpurchasePrice%2CsellingPrice%2CcurrentStock%2CminimumStock%2CmaximumStock%2CexpiryDate%0AKeyboard%2CKEY-001%2COffice%20keyboard%2C1%2CLogitech%2C15%2C25%2C100%2C10%2C200%2C2026-12-31" download="products-template.csv"><i class="fa-solid fa-download me-1"></i>Template</a>
+                                <label class="btn btn-primary btn-sm mb-0"><i class="fa-solid fa-file-import me-1"></i>Import CSV<input id="productImportFile" type="file" accept=".csv,text/csv" hidden></label>
+                            </div>
+                            <i id="featureIcon" class="fa-solid fa-table-list text-primary fs-3"></i>
+                        </div>
+                    </div>
+                    <div id="productImportResult" class="alert d-none"></div>
+                    <div id="featureError" class="alert alert-danger d-none"></div>
+                    <div id="purchaseFormPanel" class="admin-panel p-4 mb-4 d-none">
+                        <div class="d-flex justify-content-between align-items-start mb-3">
+                            <div><h3 class="h5 mb-1">Receive stock</h3><p class="text-muted small mb-0">Record incoming inventory and update product stock.</p></div>
+                            <span class="confirm-icon"><i class="fa-solid fa-cart-plus"></i></span>
+                        </div>
+                        <form id="purchaseForm" class="row g-3">
+                            <div class="col-md-5"><label class="form-label" for="purchaseProduct">Product</label><select id="purchaseProduct" class="form-select" required><option value="">Select an active product</option></select></div>
+                            <div class="col-md-3"><label class="form-label" for="purchaseQuantity">Quantity received</label><input id="purchaseQuantity" class="form-control" type="number" min="1" value="1" required></div>
+                            <div class="col-md-3"><label class="form-label" for="purchaseUnitPrice">Unit purchase price</label><input id="purchaseUnitPrice" class="form-control" type="number" min="0.01" step="0.01" required></div>
+                            <div class="col-md-1 d-flex align-items-end"><button class="btn btn-primary w-100" type="submit" title="Receive stock"><i class="fa-solid fa-plus"></i></button></div>
+                            <div class="col-12"><div class="d-flex justify-content-between border-top pt-3"><span class="text-muted">Purchase total</span><strong id="purchaseTotal">₹0.00</strong></div></div>
+                            <div class="col-12"><div id="purchaseFormMessage" class="alert d-none mb-0"></div></div>
+                        </form>
+                    </div>
+                    <div id="staffReturnView" class="admin-panel p-4 mb-4 d-none">
+                        <h3 class="h5 mb-1">Record customer return</h3>
+                        <p class="text-muted small mb-3">Returned items in good condition are added back to active stock.</p>
+                        <form id="staffReturnForm" class="row g-3">
+                            <div class="col-md-3"><label class="form-label">Sale ID</label><input id="returnSaleId" class="form-control" type="number" min="1" required></div>
+                            <div class="col-md-3"><label class="form-label">Customer ID</label><input id="returnCustomerId" class="form-control" type="number" min="1" required></div>
+                            <div class="col-md-3"><label class="form-label">Product ID</label><input id="returnProductId" class="form-control" type="number" min="1" required></div>
+                            <div class="col-md-3"><label class="form-label">Quantity</label><input id="returnQuantity" class="form-control" type="number" min="1" required></div>
+                            <div class="col-md-3"><label class="form-label">Unit price</label><input id="returnUnitPrice" class="form-control" type="number" min="0.01" step="0.01" required></div>
+                            <div class="col-md-3 d-flex align-items-end"><div class="form-check mb-2"><input id="returnDamaged" class="form-check-input" type="checkbox"><label class="form-check-label" for="returnDamaged">Damaged item</label></div></div>
+                            <div class="col-12"><div id="staffReturnMessage" class="alert d-none mb-0"></div></div>
+                            <div class="col-12"><button class="btn btn-primary" type="submit"><i class="fa-solid fa-rotate-left me-1"></i>Save return</button></div>
+                        </form>
+                    </div>
+                    <form id="productForm" class="admin-panel p-4 mb-4 d-none">
+                        <div class="d-flex justify-content-between align-items-center mb-3"><div><h3 id="productFormTitle" class="h5 mb-1">Add product</h3><p class="text-muted small mb-0">Enter the catalog and stock details.</p></div><button id="cancelProductButton" class="btn btn-sm btn-outline-secondary" type="button">Cancel</button></div>
+                        <input id="productId" type="hidden">
+                        <div class="row g-3">
+                            <div class="col-md-4"><label class="form-label">Product name</label><input id="productName" class="form-control" required></div>
+                            <div class="col-md-4"><label class="form-label">SKU</label><input id="productSku" class="form-control" required></div>
+                            <div class="col-md-4"><label class="form-label">Category ID</label><input id="productCategoryId" class="form-control" type="number" min="1" required></div>
+                            <div class="col-md-4"><label class="form-label">Brand</label><input id="productBrand" class="form-control"></div>
+                            <div class="col-md-4"><label class="form-label">Purchase price</label><input id="productPurchasePrice" class="form-control" type="number" min="0.01" step="0.01" required></div>
+                            <div class="col-md-4"><label class="form-label">Selling price</label><input id="productSellingPrice" class="form-control" type="number" min="0.01" step="0.01" required></div>
+                            <div class="col-md-4"><label class="form-label">Current stock</label><input id="productCurrentStock" class="form-control" type="number" min="0" required></div>
+                            <div class="col-md-4"><label class="form-label">Minimum stock</label><input id="productMinimumStock" class="form-control" type="number" min="0" required></div>
+                            <div class="col-md-4"><label class="form-label">Maximum stock</label><input id="productMaximumStock" class="form-control" type="number" min="0" required></div>
+                            <div class="col-md-4"><label class="form-label">Expiry date <span class="text-muted">(optional)</span></label><input id="productExpiryDate" class="form-control" type="date"></div>
+                            <div class="col-12"><label class="form-label">Description <span class="text-muted">(optional)</span></label><textarea id="productDescription" class="form-control" rows="2"></textarea></div>
+                        </div>
+                        <div id="productFormError" class="alert alert-danger d-none mt-3 mb-0"></div>
+                        <button class="btn btn-primary mt-3" type="submit"><i class="fa-solid fa-check me-1"></i>Save product</button>
+                    </form>
+                    <div id="billingView" class="d-none">
+                        <div class="row g-4">
+                            <div class="col-lg-7">
+                                <div class="card border-0 shadow-sm p-4">
+                                    <h3 class="h5 mb-3">Find products</h3>
+                                    <form id="productSearchForm" class="row g-2 mb-3">
+                                        <div class="col-sm-9"><input id="productSearchInput" class="form-control" placeholder="Search by product ID, name, or SKU" required></div>
+                                        <div class="col-sm-3"><button class="btn btn-primary w-100" type="submit"><i class="fa-solid fa-search me-1"></i>Search</button></div>
+                                    </form>
+                                    <div id="productSearchError" class="alert alert-danger d-none"></div>
+                                    <div id="productSearchResults" class="list-group"></div>
+                                </div>
+                                <div class="card border-0 shadow-sm p-4 mt-4">
+                                    <h3 class="h5 mb-3">Current bill</h3>
+                                    <div class="table-responsive"><table class="table align-middle"><thead><tr><th>Product</th><th>Price</th><th style="width: 120px">Quantity</th><th>Subtotal</th><th></th></tr></thead><tbody id="cartBody"></tbody></table></div>
+                                    <div id="cartEmpty" class="text-muted py-3">Add products to start a bill.</div>
+                                    <div class="text-end border-top pt-3"><span class="text-muted me-2">Total</span><strong id="cartTotal">₹0.00</strong></div>
+                                </div>
+                            </div>
+                            <div class="col-lg-5">
+                                <div class="card border-0 shadow-sm p-4">
+                                    <h3 class="h5 mb-3">Customer and payment</h3>
+                                    <label class="form-label" for="billingCustomer">Customer name</label>
+                                    <input id="billingCustomer" class="form-control mb-2" placeholder="Walk-in customer">
+                                    <input id="billingPhone" class="form-control mb-2" placeholder="Phone (optional)">
+                                    <input id="billingEmail" class="form-control mb-2" type="email" placeholder="Email (optional)">
+                                    <input id="billingAddress" class="form-control mb-3" placeholder="Address (optional)">
+                                    <label class="form-label" for="billingPayment">Payment method</label>
+                                    <select id="billingPayment" class="form-select mb-3"><option>Cash</option><option>Card</option><option>UPI</option></select>
+                                    <button id="checkoutButton" class="btn btn-success w-100" type="button"><i class="fa-solid fa-receipt me-2"></i>Complete sale</button>
+                                    <div id="checkoutError" class="alert alert-danger mt-3 d-none"></div>
+                                </div>
+                                <div id="receiptPanel" class="receipt-paper p-4 mt-4 d-none">
+                                    <div class="text-center"><h3 class="h5 mb-1">Smart Inventory</h3><div class="small text-muted">Customer receipt</div></div>
+                                    <hr>
+                                    <div class="small mb-3"><div>Bill: <strong id="receiptId"></strong></div><div>Date: <span id="receiptDate"></span></div><div>Cashier: <span id="receiptCashier"></span></div></div>
+                                    <div id="receiptItems" class="small"></div>
+                                    <hr>
+                                    <div class="d-flex justify-content-between"><strong>Total</strong><strong id="receiptTotal"></strong></div>
+                                    <div class="small text-muted mt-2">Payment: <span id="receiptPayment"></span></div>
+                                    <div class="d-flex gap-2 mt-4"><button id="printReceiptButton" class="btn btn-outline-dark btn-sm" type="button"><i class="fa-solid fa-print me-1"></i>Print</button><button id="pdfReceiptButton" class="btn btn-outline-danger btn-sm" type="button"><i class="fa-solid fa-file-pdf me-1"></i>Download PDF</button></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="card border-0 shadow-sm">
+                        <div class="table-responsive">
+                            <table class="table table-hover align-middle mb-0">
+                                <thead id="featureTableHead"></thead>
+                                <tbody id="featureTableBody"></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </main>
+        </div>
+    </div>
+    <div id="confirmModalBackdrop" class="confirm-modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="confirmModalTitle">
+        <div class="confirm-modal">
+            <div class="d-flex gap-3 align-items-start"><span class="confirm-icon"><i class="fa-solid fa-box-archive"></i></span><div><h2 id="confirmModalTitle" class="h5 mb-1">Archive product?</h2><p id="confirmModalMessage" class="text-muted small mb-0">This product will be removed from active stock lists.</p></div></div>
+            <div class="d-flex justify-content-end gap-2 mt-4"><button id="confirmCancelButton" class="btn btn-light" type="button">Cancel</button><button id="confirmActionButton" class="btn btn-danger" type="button"><i class="fa-solid fa-box-archive me-1"></i>Archive product</button></div>
+        </div>
+    </div>
+    <div class="toast-container position-fixed bottom-0 end-0 p-3" aria-live="polite" aria-atomic="true"><div id="appToast" class="toast app-toast" role="status"><div class="d-flex align-items-center p-3"><span class="toast-icon me-2"><i class="fa-solid fa-check"></i></span><div class="toast-body p-0" id="appToastMessage">Done</div><button type="button" class="btn-close btn-close-white ms-auto" data-bs-dismiss="toast" aria-label="Close"></button></div></div></div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
+    <script>
+        async function loadDashboard() {
+            try {
+                const res = await apiFetch('/api/dashboard');
+                if (!res.ok) {
+                    throw new Error('Dashboard request failed');
+                }
+                const data = await res.json();
+                document.getElementById('totalProducts').textContent = data.totalProducts || 0;
+                document.getElementById('totalStock').textContent = data.totalStock || 0;
+                document.getElementById('lowStockProducts').textContent = data.lowStockProducts || 0;
+                document.getElementById('todaysSales').textContent = '₹' + (Number(data.todaysSales || 0)).toFixed(2);
+                document.getElementById('monthlySales').textContent = '₹' + (Number(data.monthlySales || 0)).toFixed(2);
+                document.getElementById('pendingPurchaseOrders').textContent = data.pendingPurchaseOrders || 0;
+                document.getElementById('totalCustomers').textContent = data.totalCustomers || 0;
+                const pulseValues = [
+                    Number(data.monthlySales || 0) * .48, Number(data.monthlySales || 0) * .62,
+                    Number(data.monthlySales || 0) * .55, Number(data.monthlySales || 0) * .74,
+                    Number(data.monthlySales || 0) * .68, Number(data.monthlySales || 0) * .86,
+                    Number(data.todaysSales || 0)
+                ];
+                const maxPulse = Math.max(...pulseValues, 1);
+                document.querySelectorAll('#salesPulseChart .pulse-column').forEach((column, index) => {
+                    column.querySelector('.pulse-value').textContent = money(pulseValues[index]);
+                    column.querySelector('.pulse-bar').style.height = `${Math.max(10, (pulseValues[index] / maxPulse) * 100)}%`;
+                });
+            } catch (error) {
+                console.error('Dashboard data could not be loaded:', error);
+            }
+        }
+
+        function displayRole() {
+            const roleNames = { ADMIN: 'Administrator', STAFF: 'Staff' };
+            const role = localStorage.getItem('inventoryRole') || 'STAFF';
+            document.getElementById('userRole').textContent = roleNames[role] || 'Staff';
+            const username = localStorage.getItem('inventoryUsername') || (role === 'ADMIN' ? 'Administrator' : 'Staff member');
+            document.getElementById('profileName').textContent = username;
+            document.getElementById('dashboardGreeting').textContent = username.split(/\s+/)[0];
+            document.getElementById('profileAvatar').textContent = username.charAt(0).toUpperCase();
+            document.querySelectorAll('[data-role]').forEach(link => {
+                const allowed = link.dataset.role === 'BOTH' || link.dataset.role === role;
+                link.classList.toggle('d-none', !allowed);
+                link.classList.toggle('active', link.getAttribute('href') === window.location.pathname);
+            });
+            return role;
+        }
+
+        async function apiFetch(url, options = {}) {
+            const token = localStorage.getItem('inventoryToken');
+            const headers = new Headers(options.headers || {});
+            if (token) {
+                headers.set('Authorization', `Bearer ${token}`);
+            }
+            const response = await fetch(url, { ...options, headers });
+            if (response.status === 401) {
+                localStorage.removeItem('inventoryToken');
+                localStorage.removeItem('inventoryRole');
+                window.location.href = '/login';
+            }
+            return response;
+        }
+
+        const featureRoutes = {
+            '/products': { title: 'Products', description: 'Manage the shop product catalog.', endpoint: '/api/products', icon: 'fa-box' },
+            '/categories': { title: 'Categories', description: 'Review product categories.', endpoint: '/api/categories', icon: 'fa-tags' },
+            '/staff': { title: 'Staff', description: 'Registered staff members and account status.', endpoint: '/api/staff', icon: 'fa-user-tie' },
+            '/customers': { title: 'Customers', description: 'Review customer records.', endpoint: '/api/customers', icon: 'fa-users' },
+            '/purchases': { title: 'Purchases', description: 'Review purchase orders and stock-in activity.', endpoint: '/api/purchases', icon: 'fa-cart-plus' },
+            '/sales': { title: 'Sales', description: 'Review point-of-sale transactions.', endpoint: '/api/sales', icon: 'fa-cash-register' },
+            '/inventory': { title: 'Inventory Transactions', description: 'Review the stock movement audit trail.', endpoint: '/api/inventory/transactions', icon: 'fa-clipboard-list' },
+            '/inventory/low-stock': { title: 'Low Stock Products', description: 'Products at or below their minimum stock level.', endpoint: '/api/reports/low-stock', icon: 'fa-triangle-exclamation' },
+            '/returns': { title: 'Returns', description: 'Review customer returns.', endpoint: '/api/returns', icon: 'fa-undo' },
+            '/reports': { title: 'Inventory Report', description: 'Review current inventory levels.', endpoint: '/api/reports/inventory', icon: 'fa-chart-column' },
+            '/reports/sales/today': { title: "Today's Sales", description: 'Sales recorded today.', endpoint: '/api/reports/sales/today', icon: 'fa-cash-register' }
+        };
+
+        function escapeHtml(value) {
+            return String(value ?? '').replace(/[&<>'"]/g, character => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' }[character]));
+        }
+
+        const billingCart = new Map();
+        const billingProducts = new Map();
+        let purchaseProducts = [];
+        let purchaseHandlersReady = false;
+        let latestReceipt = null;
+
+        function money(value) {
+            return '₹' + Number(value || 0).toFixed(2);
+        }
+
+        async function setupPurchaseForm() {
+            const panel = document.getElementById('purchaseFormPanel');
+            const select = document.getElementById('purchaseProduct');
+            panel.classList.remove('d-none');
+            try {
+                const response = await apiFetch('/api/products');
+                if (!response.ok) throw new Error('Could not load active products');
+                purchaseProducts = await response.json();
+                select.innerHTML = '<option value="">Select an active product</option>' + purchaseProducts.map(product => `<option value="${product.id}" data-price="${product.purchasePrice || ''}">${escapeHtml(product.productName)} (${escapeHtml(product.sku)}) - Stock ${product.currentStock}</option>`).join('');
+            } catch (error) {
+                showPurchaseMessage(error.message, 'alert-danger');
+            }
+        }
+
+        function updatePurchaseTotal() {
+            const quantity = Number(document.getElementById('purchaseQuantity').value || 0);
+            const unitPrice = Number(document.getElementById('purchaseUnitPrice').value || 0);
+            document.getElementById('purchaseTotal').textContent = money(quantity * unitPrice);
+        }
+
+        function showPurchaseMessage(message, style) {
+            const element = document.getElementById('purchaseFormMessage');
+            element.className = `alert ${style} mb-0`;
+            element.textContent = message;
+        }
+
+        function setupPurchaseHandlers() {
+            if (purchaseHandlersReady) return;
+            purchaseHandlersReady = true;
+            const select = document.getElementById('purchaseProduct');
+            select.addEventListener('change', () => {
+                const selected = select.options[select.selectedIndex];
+                const price = selected.dataset.price;
+                if (price) document.getElementById('purchaseUnitPrice').value = price;
+                updatePurchaseTotal();
+            });
+            document.getElementById('purchaseQuantity').addEventListener('input', updatePurchaseTotal);
+            document.getElementById('purchaseUnitPrice').addEventListener('input', updatePurchaseTotal);
+            document.getElementById('purchaseForm').addEventListener('submit', async event => {
+                event.preventDefault();
+                const productId = Number(select.value);
+                const quantity = Number(document.getElementById('purchaseQuantity').value);
+                const unitPrice = Number(document.getElementById('purchaseUnitPrice').value);
+                if (!productId || quantity < 1 || unitPrice <= 0) {
+                    showPurchaseMessage('Select a product and enter a valid quantity and unit price.', 'alert-danger');
+                    return;
+                }
+                try {
+                    const response = await apiFetch('/api/purchases', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ items: [{ productId, quantity, unitPrice }] })
+                    });
+                    const data = await response.json();
+                    if (!response.ok) throw new Error(data.message || data.error || 'Could not receive stock');
+                    showPurchaseMessage(`Purchase PO-${data.id} saved. ${quantity} unit(s) added to stock.`, 'alert-success');
+                    showToast('Stock received and inventory updated.', 'fa-cart-plus');
+                    event.target.reset();
+                    document.getElementById('purchaseQuantity').value = 1;
+                    updatePurchaseTotal();
+                    await setupPurchaseForm();
+                    loadFeatureView();
+                } catch (error) {
+                    showPurchaseMessage(error.message, 'alert-danger');
+                }
+            });
+        }
+
+        function showToast(message, icon = 'fa-check') {
+            document.querySelector('#appToast .toast-icon i').className = `fa-solid ${icon}`;
+            document.getElementById('appToastMessage').textContent = message;
+            bootstrap.Toast.getOrCreateInstance(document.getElementById('appToast'), { delay: 3600 }).show();
+        }
+
+        function confirmArchive(productName) {
+            return new Promise(resolve => {
+                const backdrop = document.getElementById('confirmModalBackdrop');
+                const title = document.getElementById('confirmModalTitle');
+                const message = document.getElementById('confirmModalMessage');
+                const cancel = document.getElementById('confirmCancelButton');
+                const confirm = document.getElementById('confirmActionButton');
+                title.textContent = `Archive ${productName || 'this product'}?`;
+                message.textContent = 'It will be removed from active stock lists but retained in the database.';
+                backdrop.classList.add('show');
+                const close = result => {
+                    backdrop.classList.remove('show');
+                    cancel.removeEventListener('click', cancelAction);
+                    confirm.removeEventListener('click', confirmAction);
+                    backdrop.removeEventListener('click', backdropAction);
+                    resolve(result);
+                };
+                const cancelAction = () => close(false);
+                const confirmAction = () => close(true);
+                const backdropAction = event => { if (event.target === backdrop) close(false); };
+                cancel.addEventListener('click', cancelAction);
+                confirm.addEventListener('click', confirmAction);
+                backdrop.addEventListener('click', backdropAction);
+            });
+        }
+
+        function renderCart() {
+            const body = document.getElementById('cartBody');
+            const empty = document.getElementById('cartEmpty');
+            let total = 0;
+            body.innerHTML = '';
+            billingCart.forEach((line, productId) => {
+                const subtotal = line.product.sellingPrice * line.quantity;
+                total += subtotal;
+                body.innerHTML += `<tr><td><strong>${escapeHtml(line.product.productName)}</strong><div class="small text-muted">${escapeHtml(line.product.sku)} | Stock: ${line.product.currentStock}</div></td><td>${money(line.product.sellingPrice)}</td><td><input class="form-control form-control-sm cart-quantity" data-id="${productId}" type="number" min="1" max="${line.product.currentStock}" value="${line.quantity}"></td><td>${money(subtotal)}</td><td><button class="btn btn-sm btn-outline-danger remove-cart-item" data-id="${productId}" type="button" title="Remove"><i class="fa-solid fa-xmark"></i></button></td></tr>`;
+            });
+            empty.classList.toggle('d-none', billingCart.size > 0);
+            document.getElementById('cartTotal').textContent = money(total);
+        }
+
+        async function searchBillingProducts(keyword) {
+            const error = document.getElementById('productSearchError');
+            const results = document.getElementById('productSearchResults');
+            error.classList.add('d-none');
+            results.innerHTML = '';
+            try {
+                let products = [];
+                if (/^\d+$/.test(keyword)) {
+                    const exact = await apiFetch(`/api/products/${keyword}`);
+                    if (exact.ok) products = [await exact.json()];
+                }
+                if (!products.length) {
+                    const response = await apiFetch(`/api/products/search?keyword=${encodeURIComponent(keyword)}`);
+                    if (!response.ok) throw new Error('Product search failed');
+                    products = await response.json();
+                }
+                products.forEach(product => {
+                    billingProducts.set(String(product.id), product);
+                    results.innerHTML += `<button class="list-group-item list-group-item-action d-flex justify-content-between align-items-center billing-product-result" data-id="${product.id}" type="button"><span><strong>${escapeHtml(product.productName)}</strong><small class="d-block text-muted">ID ${product.id} | ${escapeHtml(product.sku)} | Stock ${product.currentStock}</small></span><span>${money(product.sellingPrice)}</span></button>`;
+                });
+                if (!products.length) results.innerHTML = '<div class="text-muted py-3">No active products found.</div>';
+            } catch (requestError) {
+                error.textContent = requestError.message;
+                error.classList.remove('d-none');
+            }
+        }
+
+        function showReceipt(sale) {
+            latestReceipt = sale;
+            document.getElementById('receiptPanel').classList.remove('d-none');
+            document.getElementById('receiptId').textContent = `SL-${sale.id}`;
+            document.getElementById('receiptDate').textContent = sale.saleDate || new Date().toISOString().slice(0, 10);
+            document.getElementById('receiptCashier').textContent = sale.cashierUsername || '';
+            document.getElementById('receiptPayment').textContent = sale.paymentMethod || '';
+            document.getElementById('receiptTotal').textContent = money(sale.totalAmount);
+            const customer = sale.customerName ? `<div class="mb-2">Customer: ${escapeHtml(sale.customerName)}</div>` : '';
+            document.getElementById('receiptItems').innerHTML = customer + sale.items.map(item => `<div class="d-flex justify-content-between"><span>${escapeHtml(item.productName)} x ${item.quantity}</span><span>${money(item.subtotal)}</span></div>`).join('');
+        }
+
+        function productPayload() {
+            const value = id => document.getElementById(id).value.trim();
+            return {
+                productName: value('productName'), sku: value('productSku'), categoryId: Number(value('productCategoryId')),
+                brand: value('productBrand') || null, purchasePrice: Number(value('productPurchasePrice')), sellingPrice: Number(value('productSellingPrice')),
+                currentStock: Number(value('productCurrentStock')), minimumStock: Number(value('productMinimumStock')), maximumStock: Number(value('productMaximumStock')),
+                expiryDate: value('productExpiryDate') || null,
+                description: value('productDescription') || null, status: true
+            };
+        }
+
+        function resetProductForm() {
+            document.getElementById('productForm').reset();
+            document.getElementById('productId').value = '';
+            document.getElementById('productFormTitle').textContent = 'Add product';
+            document.getElementById('productFormError').classList.add('d-none');
+            document.getElementById('productForm').classList.add('d-none');
+        }
+
+        function openProductForm(product) {
+            const form = document.getElementById('productForm');
+            form.classList.remove('d-none');
+            document.getElementById('productFormTitle').textContent = product ? 'Edit product' : 'Add product';
+            document.getElementById('productId').value = product ? product.id : '';
+            if (product) {
+                document.getElementById('productName').value = product.productName || '';
+                document.getElementById('productSku').value = product.sku || '';
+                document.getElementById('productCategoryId').value = product.categoryId || '';
+                document.getElementById('productBrand').value = product.brand || '';
+                document.getElementById('productPurchasePrice').value = product.purchasePrice || '';
+                document.getElementById('productSellingPrice').value = product.sellingPrice || '';
+                document.getElementById('productCurrentStock').value = product.currentStock || 0;
+                document.getElementById('productMinimumStock').value = product.minimumStock || 0;
+                document.getElementById('productMaximumStock').value = product.maximumStock || 0;
+                document.getElementById('productExpiryDate').value = product.expiryDate || '';
+                document.getElementById('productDescription').value = product.description || '';
+            }
+            form.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+
+        function renderProductTable(products) {
+            const head = document.getElementById('featureTableHead');
+            const body = document.getElementById('featureTableBody');
+            head.innerHTML = '<tr><th>Product</th><th>SKU</th><th>Category</th><th>Price</th><th>Stock</th><th>Status</th><th class="text-end">Actions</th></tr>';
+            body.innerHTML = products.length ? products.map(product => `<tr><td><strong>${escapeHtml(product.productName)}</strong><div class="small text-muted">${escapeHtml(product.brand || 'No brand')}</div></td><td>${escapeHtml(product.sku)}</td><td>${escapeHtml(product.categoryId)}</td><td>${money(product.sellingPrice)}</td><td><strong>${product.currentStock}</strong><div class="small text-muted">Min ${product.minimumStock}</div></td><td><span class="badge ${product.status ? 'text-bg-success' : 'text-bg-secondary'}">${product.status ? 'Active' : 'Archived'}</span></td><td class="text-end text-nowrap"><button class="btn btn-sm btn-outline-primary edit-product" data-id="${product.id}" type="button" title="Edit product"><i class="fa-solid fa-pen"></i></button> <button class="btn btn-sm btn-outline-danger archive-product" data-id="${product.id}" type="button" title="Remove product from stock"><i class="fa-solid fa-box-archive"></i></button></td></tr>`).join('') : '<tr><td colspan="7" class="text-muted p-4">No active products found.</td></tr>';
+            products.forEach(product => billingProducts.set(String(product.id), product));
+            body.querySelectorAll('.edit-product').forEach(button => button.addEventListener('click', () => openProductForm(billingProducts.get(button.dataset.id))));
+            body.querySelectorAll('.archive-product').forEach(button => button.addEventListener('click', async () => {
+                const product = billingProducts.get(button.dataset.id);
+                if (!await confirmArchive(product && product.productName)) return;
+                const response = await apiFetch(`/api/products/${button.dataset.id}`, { method: 'DELETE' });
+                if (!response.ok) { document.getElementById('featureError').textContent = 'Could not archive the product.'; document.getElementById('featureError').classList.remove('d-none'); return; }
+                showToast('Product archived and removed from active stock.', 'fa-box-archive');
+                loadFeatureView();
+            }));
+        }
+
+        function setupBilling() {
+            document.getElementById('productSearchForm').addEventListener('submit', event => {
+                event.preventDefault();
+                searchBillingProducts(document.getElementById('productSearchInput').value.trim());
+            });
+            document.getElementById('productSearchResults').addEventListener('click', event => {
+                const button = event.target.closest('.billing-product-result');
+                if (!button) return;
+                const product = billingProducts.get(button.dataset.id);
+                billingCart.set(button.dataset.id, { product, quantity: 1 });
+                renderCart();
+            });
+            document.getElementById('cartBody').addEventListener('input', event => {
+                if (!event.target.classList.contains('cart-quantity')) return;
+                const line = billingCart.get(event.target.dataset.id);
+                const quantity = Number(event.target.value);
+                if (line && quantity > 0 && quantity <= line.product.currentStock) line.quantity = quantity;
+                renderCart();
+            });
+            document.getElementById('cartBody').addEventListener('click', event => {
+                const button = event.target.closest('.remove-cart-item');
+                if (button) billingCart.delete(button.dataset.id);
+                renderCart();
+            });
+            document.getElementById('checkoutButton').addEventListener('click', async () => {
+                const error = document.getElementById('checkoutError');
+                error.classList.add('d-none');
+                if (!billingCart.size) {
+                    error.textContent = 'Add at least one product to the bill.';
+                    error.classList.remove('d-none');
+                    return;
+                }
+                try {
+                    const response = await apiFetch('/api/sales', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({
+                        customerName: document.getElementById('billingCustomer').value.trim() || 'Walk-in customer',
+                        customerPhone: document.getElementById('billingPhone').value.trim(),
+                        customerEmail: document.getElementById('billingEmail').value.trim(),
+                        customerAddress: document.getElementById('billingAddress').value.trim(),
+                        paymentMethod: document.getElementById('billingPayment').value,
+                        items: Array.from(billingCart.entries()).map(([productId, line]) => ({ productId: Number(productId), quantity: line.quantity }))
+                    }) });
+                    const data = await response.json();
+                    if (!response.ok) throw new Error(data.message || data.error || 'Checkout failed');
+                    showReceipt(data);
+                    billingCart.clear();
+                    renderCart();
+                    document.getElementById('productSearchResults').innerHTML = '';
+                    document.getElementById('billingCustomer').value = '';
+                    document.getElementById('billingPhone').value = '';
+                    document.getElementById('billingEmail').value = '';
+                    document.getElementById('billingAddress').value = '';
+                } catch (checkoutError) {
+                    error.textContent = checkoutError.message;
+                    error.classList.remove('d-none');
+                }
+            });
+            document.getElementById('printReceiptButton').addEventListener('click', () => window.print());
+            document.getElementById('pdfReceiptButton').addEventListener('click', () => {
+                if (!latestReceipt || !window.jspdf) return;
+                const { jsPDF } = window.jspdf;
+                const pdf = new jsPDF();
+                pdf.setFontSize(18);
+                pdf.text('Smart Inventory - Customer Receipt', 20, 20);
+                pdf.setFontSize(11);
+                pdf.text(`Bill: SL-${latestReceipt.id}`, 20, 32);
+                pdf.text(`Date: ${latestReceipt.saleDate || ''}`, 20, 40);
+                pdf.text(`Cashier: ${latestReceipt.cashierUsername || ''}`, 20, 48);
+                let y = 62;
+                latestReceipt.items.forEach(item => { pdf.text(`${item.productName} x ${item.quantity}`, 20, y); pdf.text(money(item.subtotal), 150, y); y += 8; });
+                pdf.line(20, y, 190, y);
+                pdf.setFontSize(13);
+                pdf.text(`Total: ${money(latestReceipt.totalAmount)}`, 20, y + 10);
+                pdf.save(`bill-SL-${latestReceipt.id}.pdf`);
+            });
+            renderCart();
+        }
+
+        async function loadFeatureView() {
+            const route = featureRoutes[window.location.pathname];
+            if (!route) {
+                loadDashboard();
+                return;
+            }
+
+            document.getElementById('dashboardView').classList.add('d-none');
+            document.getElementById('featureView').classList.remove('d-none');
+            document.getElementById('featureTitle').textContent = route.title;
+            document.getElementById('featureDescription').textContent = route.description;
+            document.getElementById('featureIcon').className = `fa-solid ${route.icon} text-primary fs-3`;
+            const isBilling = window.location.pathname === '/sales' && localStorage.getItem('inventoryRole') === 'STAFF';
+            const isStaffReturns = window.location.pathname === '/returns' && localStorage.getItem('inventoryRole') === 'STAFF';
+            const isPurchases = window.location.pathname === '/purchases' && localStorage.getItem('inventoryRole') === 'ADMIN';
+            document.getElementById('billingView').classList.toggle('d-none', !isBilling);
+            document.getElementById('purchaseFormPanel').classList.toggle('d-none', !isPurchases);
+            document.getElementById('staffReturnView').classList.toggle('d-none', !isStaffReturns);
+            document.querySelector('#featureView > .card').classList.toggle('d-none', isBilling || isStaffReturns);
+            if (isBilling) {
+                setupBilling();
+                return;
+            }
+            if (isStaffReturns) return;
+            if (isPurchases) {
+                setupPurchaseHandlers();
+                setupPurchaseForm();
+            }
+            document.getElementById('productImportControls').classList.toggle('d-none',
+                window.location.pathname !== '/products' || localStorage.getItem('inventoryRole') !== 'ADMIN');
+            document.getElementById('productForm').classList.add('d-none');
+
+            if (!route.endpoint) {
+                document.getElementById('featureTableHead').innerHTML = '';
+                document.getElementById('featureTableBody').innerHTML = '<tr><td class="text-muted p-4">No user administration API is configured yet.</td></tr>';
+                return;
+            }
+
+            try {
+                const response = await apiFetch(route.endpoint);
+                if (!response.ok) {
+                    throw new Error('Could not load this module');
+                }
+                const records = await response.json();
+                const rows = Array.isArray(records) ? records : [records];
+                if (window.location.pathname === '/products') {
+                    renderProductTable(rows);
+                    return;
+                }
+                const columns = rows.length ? Object.keys(rows[0]) : [];
+                document.getElementById('featureTableHead').innerHTML = `<tr>${columns.map(column => `<th>${escapeHtml(column)}</th>`).join('')}</tr>`;
+                document.getElementById('featureTableBody').innerHTML = rows.length
+                    ? rows.map(row => `<tr>${columns.map(column => `<td>${escapeHtml(typeof row[column] === 'object' ? JSON.stringify(row[column]) : row[column])}</td>`).join('')}</tr>`).join('')
+                    : '<tr><td class="text-muted p-4">No records found.</td></tr>';
+            } catch (error) {
+                document.getElementById('featureError').textContent = error.message;
+                document.getElementById('featureError').classList.remove('d-none');
+            }
+        }
+
+        document.getElementById('productImportFile').addEventListener('change', async function () {
+            const file = this.files[0];
+            const result = document.getElementById('productImportResult');
+            if (!file) return;
+            const formData = new FormData();
+            formData.append('file', file);
+            result.className = 'alert alert-info';
+            result.textContent = 'Importing products...';
+            try {
+                const response = await apiFetch('/api/products/import', { method: 'POST', body: formData });
+                const data = await response.json();
+                if (!response.ok) throw new Error(data.error || 'Import failed');
+                result.className = data.failedCount ? 'alert alert-warning' : 'alert alert-success';
+                result.innerHTML = `<strong>Imported ${data.importedCount} product(s).</strong> ${data.failedCount} row(s) failed.` +
+                    (data.errors.length ? `<br>${data.errors.map(escapeHtml).join('<br>')}` : '');
+                loadFeatureView();
+            } catch (error) {
+                result.className = 'alert alert-danger';
+                result.textContent = error.message;
+            } finally {
+                this.value = '';
+            }
+        });
+
+        document.getElementById('staffReturnForm').addEventListener('submit', async event => {
+            event.preventDefault();
+            const message = document.getElementById('staffReturnMessage');
+            message.className = 'alert alert-info mb-0';
+            message.textContent = 'Saving return...';
+            try {
+                const response = await apiFetch('/api/returns', {
+                    method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({
+                        saleId: Number(document.getElementById('returnSaleId').value),
+                        customerId: Number(document.getElementById('returnCustomerId').value),
+                        items: [{ productId: Number(document.getElementById('returnProductId').value), quantity: Number(document.getElementById('returnQuantity').value), unitPrice: Number(document.getElementById('returnUnitPrice').value), damaged: document.getElementById('returnDamaged').checked }]
+                    })
+                });
+                const data = await response.json();
+                if (!response.ok) throw new Error(data.message || data.error || 'Could not save return');
+                message.className = 'alert alert-success mb-0';
+                message.textContent = `Return RET-${data.id} saved. Stock has been updated where applicable.`;
+                event.target.reset();
+            } catch (error) {
+                message.className = 'alert alert-danger mb-0';
+                message.textContent = error.message;
+            }
+        });
+
+        document.getElementById('addProductButton').addEventListener('click', () => openProductForm());
+        document.getElementById('cancelProductButton').addEventListener('click', resetProductForm);
+        document.getElementById('productForm').addEventListener('submit', async event => {
+            event.preventDefault();
+            const error = document.getElementById('productFormError');
+            error.classList.add('d-none');
+            const id = document.getElementById('productId').value;
+            try {
+                const response = await apiFetch(id ? `/api/products/${id}` : '/api/products', {
+                    method: id ? 'PUT' : 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(productPayload())
+                });
+                const data = await response.json();
+                if (!response.ok) throw new Error(data.message || data.error || 'Could not save product');
+                resetProductForm();
+                loadFeatureView();
+            } catch (requestError) {
+                error.textContent = requestError.message;
+                error.classList.remove('d-none');
+            }
+        });
+
+        function openLowStockProducts() {
+            window.location.href = '/inventory/low-stock';
+        }
+
+        function openTodaySales() {
+            window.location.href = '/reports/sales/today';
+        }
+
+        document.getElementById('lowStockCard').addEventListener('click', openLowStockProducts);
+        document.getElementById('lowStockCard').addEventListener('keydown', function (event) {
+            if (event.key === 'Enter' || event.key === ' ') {
+                event.preventDefault();
+                openLowStockProducts();
+            }
+        });
+
+        document.getElementById('todaySalesCard').addEventListener('click', openTodaySales);
+        document.getElementById('todaySalesCard').addEventListener('keydown', function (event) {
+            if (event.key === 'Enter' || event.key === ' ') {
+                event.preventDefault();
+                openTodaySales();
+            }
+        });
+
+        document.getElementById('logoutButton').addEventListener('click', function () {
+            localStorage.removeItem('inventoryToken');
+            localStorage.removeItem('inventoryRole');
+            localStorage.removeItem('inventoryUsername');
+            window.location.href = '/login';
+        });
+
+        const token = localStorage.getItem('inventoryToken');
+        if (!token) {
+            window.location.replace('/login');
+        }
+
+        const currentRole = displayRole();
+        document.getElementById('dashboardDate').textContent = new Intl.DateTimeFormat(undefined, { weekday: 'long', month: 'short', day: 'numeric' }).format(new Date());
+        if ((window.location.pathname === '/' || window.location.pathname === '/dashboard') && currentRole === 'STAFF') {
+            window.location.href = '/sales';
+        } else if (window.location.pathname === '/' || window.location.pathname === '/dashboard') {
+            loadDashboard();
+        } else {
+            loadFeatureView();
+        }
+    </script>
+</body>
+</html>

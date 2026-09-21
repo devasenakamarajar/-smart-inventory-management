@@ -1,0 +1,10 @@
+:root { color-scheme: light; }
+* { box-sizing: border-box; }
+html, body { width: 100%; height: 100%; margin: 0; }
+body { display: grid; place-items: center; overflow: hidden; background: radial-gradient(circle at 18% 18%, #d9f2ed 0, transparent 28%), radial-gradient(circle at 82% 82%, #e1f1ed 0, transparent 26%), #f8fcfb; }
+.splash { display: grid; place-items: center; width: 100%; height: 100%; padding: 2rem; animation: appear 700ms ease-out both; }
+.splash img { display: block; width: min(78vw, 720px); max-height: 78vh; object-fit: contain; animation: settle 1800ms ease-out both; }
+.splash::after { border: 1px solid rgba(15, 118, 110, .16); border-radius: 50%; box-shadow: 0 0 0 28px rgba(15, 118, 110, .04), 0 0 0 62px rgba(15, 118, 110, .03); content: ''; height: 290px; position: fixed; right: -90px; top: -100px; width: 290px; }
+@keyframes appear { from { opacity: 0; } to { opacity: 1; } }
+@keyframes settle { from { transform: scale(.96); opacity: .6; } to { transform: scale(1); opacity: 1; } }
+@media (prefers-reduced-motion: reduce) { .splash, .splash img { animation: none; } }

@@ -1,0 +1,22 @@
+# Build output
+target/
+*.class
+
+# Local environments and secrets
+.venv/
+.env
+.env.*
+!.env.example
+
+# IDE and OS files
+.idea/
+.vscode/*
+!.vscode/launch.json
+!.vscode/tasks.json
+*.iml
+.DS_Store
+Thumbs.db
+
+# Logs and generated runtime files
+*.log
+forecasting/forecast_output.json
