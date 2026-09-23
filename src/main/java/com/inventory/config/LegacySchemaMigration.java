@@ -7,6 +7,11 @@ import org.springframework.stereotype.Component;
 public class LegacySchemaMigration {
 
     public LegacySchemaMigration(JdbcTemplate jdbcTemplate) {
-        jdbcTemplate.execute("ALTER TABLE purchase_orders MODIFY COLUMN supplier_id BIGINT NULL");
+        try {
+            jdbcTemplate.execute("ALTER TABLE purchase_orders MODIFY COLUMN supplier_id BIGINT NULL");
+        } catch (Exception e) {
+            // Ignore error on clean databases where column doesn't exist yet
+            System.out.println("Schema migration skipped: " + e.getMessage());
+        }
     }
 }
